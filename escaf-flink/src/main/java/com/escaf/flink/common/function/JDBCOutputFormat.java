@@ -71,6 +71,7 @@ public class JDBCOutputFormat extends RichOutputFormat<Row> {
 			scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
 				@Override
 				public void run() {
+
 					// 此处需要加锁,需要保证upload、batchCount操作的线程安全
 					long currentTimeMills = System.currentTimeMillis();
 					// 这里做一个时间间隔检查、假设距离上一次提交事件大于5S才需要检查是否需要进行进一步检查是否执行数据库提交操作

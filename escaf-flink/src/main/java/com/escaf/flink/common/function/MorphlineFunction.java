@@ -1,7 +1,6 @@
 package com.escaf.flink.common.function;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,48 +25,38 @@ import com.google.common.base.Preconditions;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.ShardedJedis;
-
 /**
  * 在Flink中使用Morphline对数据进行一些ETL操作 1.规则的配置可以是支持本地化、第三方缓存等,具体使用可以根据实际情况选用
  * 
  * @author HANLIN
  *
  */
-public class MorphlineFunction extends RichMapFunction<String, org.apache.avro.generic.GenericData.Record> {
+public abstract class MorphlineFunction extends RichMapFunction<String, org.apache.avro.generic.GenericData.Record> {
 
 	private static final long serialVersionUID = 1L;
 
-	private ShardedJedis jedis = null;
-
-	private String serverIp;
-
-	private int serverPort;
-
-	private int connectTimeout = 10000;
-
 	private Map<String, Command> cmdMap = null;
-
-	private String morphlineKey;
 
 	private MorphlineContext morphlineContext = null;
 
 	// 这个是线程安全的
 	private Collector finalChild = null;
-
+	
+	protected String commandDataType;
+	
+	
 	private static final Logger log = LoggerFactory.getLogger(MorphlineFunction.class);
 
 	public MorphlineFunction() {
 
 	}
 
+	protected abstract Map<String, String> getCommandString();
+
 	@Override
 	public void open(Configuration parameters) throws Exception {
 
-		// FIXME 需要考虑保障redis连接挂掉了情况、重连情况、这里不使用Redis连接池
-		jedis = new ShardedJedis(Arrays.asList(new JedisShardInfo(serverIp, serverPort, connectTimeout)));
-		Map<String, String> logtypeToCmd = jedis.hgetAll(morphlineKey);
+		Map<String, String> logtypeToCmd = getCommandString();
 
 		morphlineContext = new MorphlineContext.Builder().setExceptionHandler(new FaultTolerance(false, false))
 				.setMetricRegistry(SharedMetricRegistries.getOrCreate("flink.morphlineContext")).build();
@@ -93,8 +82,8 @@ public class MorphlineFunction extends RichMapFunction<String, org.apache.avro.g
 	public org.apache.avro.generic.GenericData.Record map(String value) throws Exception {
 
 		try {
-			String logType = "trans_log";
-			Command cmd = cmdMap.get(logType);
+						
+			Command cmd = cmdMap.get(commandDataType);
 			if (null != cmd) {
 				Record record = new Record();
 				record.put(Fields.ATTACHMENT_BODY, value.getBytes("UTF-8"));
@@ -126,66 +115,13 @@ public class MorphlineFunction extends RichMapFunction<String, org.apache.avro.g
 
 	@Override
 	public void close() throws Exception {
-		if (null != jedis) {
 
-			jedis.disconnect();
-
-		}
 		if (null != cmdMap && !cmdMap.isEmpty()) {
 			for (Command cmd : cmdMap.values()) {
 				Notifications.notifyShutdown(cmd);
 			}
 
 			cmdMap = null;
-
-		}
-
-	}
-
-	public static MorphlineFunctionBuidler buildMorphlineFunction() {
-
-		return new MorphlineFunctionBuidler();
-
-	}
-
-	public static class MorphlineFunctionBuidler {
-
-		private final MorphlineFunction morphlineFunction;
-
-		protected MorphlineFunctionBuidler() {
-			this.morphlineFunction = new MorphlineFunction();
-		}
-
-		public MorphlineFunctionBuidler setServerIp(String serverIp) {
-			morphlineFunction.serverIp = serverIp;
-			return this;
-		}
-
-		public MorphlineFunctionBuidler setServerPort(int serverPort) {
-			morphlineFunction.serverPort = serverPort;
-			return this;
-		}
-
-		public MorphlineFunctionBuidler setConnectTimeout(int connectTimeout) {
-			morphlineFunction.connectTimeout = connectTimeout;
-			return this;
-		}
-
-		public MorphlineFunctionBuidler setMorphlineKey(String key) {
-			morphlineFunction.morphlineKey = key;
-			return this;
-		}
-
-		public MorphlineFunction build() {
-
-			if (morphlineFunction.serverIp == null) {
-				throw new IllegalArgumentException("No Redis URL supplied.");
-			}
-			if (morphlineFunction.serverPort <= 0) {
-				throw new IllegalArgumentException("No Redis port suplied");
-			}
-
-			return morphlineFunction;
 
 		}
 

@@ -45,7 +45,7 @@ class TransJob extends BaseEscafJob {
 		DataStream<String> messageStream = env
 				.addSource(EscafFlinkSupport.createKafkaConsumer010(new SimpleStringSchema(), flinkConfig));
 
-		DataStream<Record> messageStream1 = messageStream.map(EscafFlinkSupport.createMorphlineFunction(flinkConfig));
+		DataStream<Record> messageStream1 = messageStream.map(EscafFlinkSupport.createRedisMorphlineFunction(flinkConfig));
 
 		DataStream<Row> messageStream2 = messageStream1.flatMap(new JdbcRowFunction(flinkConfig));
 

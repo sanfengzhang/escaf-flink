@@ -10,6 +10,7 @@ import org.apache.flink.streaming.util.serialization.DeserializationSchema;
 
 import com.escaf.flink.common.function.JDBCOutputFormat;
 import com.escaf.flink.common.function.MorphlineFunction;
+import com.escaf.flink.common.function.RedisMorphlineFunction;
 
 public class EscafFlinkSupport {
 
@@ -43,7 +44,7 @@ public class EscafFlinkSupport {
 		String[] topicArrays = StringUtils.split(topics, ",");
 		FlinkKafkaConsumer010 consumer010 = new FlinkKafkaConsumer010(Arrays.asList(topicArrays), deserializationSchema,
 				p);
-//		 consumer010.setStartFromLatest();
+		// consumer010.setStartFromLatest();
 		consumer010.setStartFromEarliest();
 
 		return consumer010;
@@ -99,12 +100,13 @@ public class EscafFlinkSupport {
 				.setSqlTypes(typesArray).setBatchInterval(1000).finish();
 	}
 
-	public static MorphlineFunction createMorphlineFunction(AbstractFlinkConfig flinkConfig) {
+	public static MorphlineFunction createRedisMorphlineFunction(AbstractFlinkConfig flinkConfig) {
 
-		return MorphlineFunction.buildMorphlineFunction().setServerPort(flinkConfig.getInteger("flink.redis.port"))
+		return RedisMorphlineFunction.buildMorphlineFunction().setServerPort(flinkConfig.getInteger("flink.redis.port"))
 				.setConnectTimeout(flinkConfig.getInteger("flink.redis.timeout"))
 				.setServerIp(flinkConfig.getRequried("flink.redis.host"))
-				.setMorphlineKey(flinkConfig.getRequried("flink.redis.morphlinekey")).build();
+				.setMorphlineKey(flinkConfig.getRequried("flink.redis.morphlinekey"))
+				.setCommandDataType(flinkConfig.getRequried("flink.morphlin.cmdtype")).build();
 
 	}
 
