@@ -52,7 +52,6 @@ public abstract class BaseEscafJob {
 
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-
 			e.printStackTrace();
 		}
 	}

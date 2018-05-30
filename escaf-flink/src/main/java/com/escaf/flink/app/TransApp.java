@@ -30,7 +30,6 @@ class TransJob extends BaseEscafJob {
 	private static final String DELAY_BETWEEN_ATTEMPTS = "flink.delayBetweenAttempts";
 
 	private static final String CHECKPOINT_INTERVAL = "flink.checkponit.interval";
-	
 
 	@SuppressWarnings("unchecked")
 	public void start() throws Exception {
