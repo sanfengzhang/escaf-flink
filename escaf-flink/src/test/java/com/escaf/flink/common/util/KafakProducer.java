@@ -34,7 +34,7 @@ public class KafakProducer {
 				"UTF-8");
 
 		for (String eventStr : _list) {
-			ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[], byte[]>("translog1",
+			ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[], byte[]>("trans_log_test",
 					eventStr.getBytes("UTF-8"));
 			producer.send(record, new Callback() {
 

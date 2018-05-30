@@ -19,7 +19,7 @@ public class KafkaConsumerTest {
 
 		p.put("value.deserializer", ByteArrayDeserializer.class);
 		p.put("key.deserializer", ByteArrayDeserializer.class);
-		p.put("group.id", "translog-consumew2");
+		p.put("group.id", "translog-consume2");
 		p.put("enable.auto.commit", "true");
 		p.put("auto.commit.interval.ms", "3000");
 		p.put("session.timeout.ms", "30000");
@@ -30,13 +30,13 @@ public class KafkaConsumerTest {
 
 		Set<String> set = new HashSet<String>();
 
-		set.add("translog1");
+		set.add("trans_log_test");
 		kafkaConsumer.subscribe(set);
 
 		ConsumerRecords<byte[], byte[]> records = kafkaConsumer.poll(1000);
 		if (!records.isEmpty()) {
 			for (ConsumerRecord<byte[], byte[]> record : records) {
-				System.out.println(new String(record.value(), "UTF-8"));
+				System.out.println(new String(record.value(), "UTF-8")+" "+record.topic());
 			}
 		}
 

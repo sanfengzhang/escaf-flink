@@ -23,7 +23,7 @@ public class FunctionUtil {
 
 		String value = IOUtils.toString(new FileInputStream(new File("C:\\Users\\owner\\Desktop\\temp.conf")));
 
-		map.put("trans_log", value);
+		map.put("trans_log_test", value);
 		jedis.hmset("Morphline", map);
 
 		jedis.close();
@@ -37,7 +37,7 @@ public class FunctionUtil {
 
 		Map<String, String> map = jedis.hgetAll("Morphline");
 
-		System.out.println(map.get("trans_log"));
+		System.out.println(map.get("trans_log_test"));
 
 		jedis.close();
 

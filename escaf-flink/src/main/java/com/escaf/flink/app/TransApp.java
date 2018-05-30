@@ -5,11 +5,11 @@ import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.OutputFormatSinkFunction;
-import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.apache.flink.types.Row;
 
 import com.escaf.flink.common.BaseEscafJob;
 import com.escaf.flink.common.EscafFlinkSupport;
+import com.escaf.flink.common.EscafKafkaMessage;
 import com.escaf.flink.common.function.JDBCOutputFormat;
 import com.escaf.flink.common.function.JdbcRowFunction;
 
@@ -33,7 +33,6 @@ class TransJob extends BaseEscafJob {
 
 	@SuppressWarnings("unchecked")
 	public void start() throws Exception {
-
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.getConfig().disableSysoutLogging();
 		env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(
@@ -42,10 +41,11 @@ class TransJob extends BaseEscafJob {
 
 		env.getConfig().setGlobalJobParameters(getGlobalJobParameters());
 
-		DataStream<String> messageStream = env
-				.addSource(EscafFlinkSupport.createKafkaConsumer010(new SimpleStringSchema(), flinkConfig));
+		DataStream<EscafKafkaMessage> messageStream = env
+				.addSource(EscafFlinkSupport.createKafkaConsumer010JSON(true, flinkConfig));
 
-		DataStream<Record> messageStream1 = messageStream.map(EscafFlinkSupport.createRedisMorphlineFunction(flinkConfig));
+		DataStream<Record> messageStream1 = messageStream
+				.map(EscafFlinkSupport.createRedisMorphlineFunction(flinkConfig));
 
 		DataStream<Row> messageStream2 = messageStream1.flatMap(new JdbcRowFunction(flinkConfig));
 

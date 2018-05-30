@@ -50,6 +50,31 @@ public class EscafFlinkSupport {
 		return consumer010;
 	}
 
+	/**
+	 * 返回JSON类型的数据包含元数据topic
+	 * 
+	 * @param deserializer
+	 * @param flinkConfig
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static FlinkKafkaConsumer010 createKafkaConsumer010JSON(boolean includeMetadata,
+			AbstractFlinkConfig flinkConfig) {
+
+		Properties p = new Properties();
+		p.put("bootstrap.servers", flinkConfig.getRequried(KAFKA_BROKER_SERVERS));
+		p.put("group.id", flinkConfig.getRequried(KAFKA_CONSUME_GROUP_ID));
+
+		String topics = flinkConfig.getRequried(KAFAK_CONSUME_TOPIC);
+		String[] topicArrays = StringUtils.split(topics, ",");
+		FlinkKafkaConsumer010 consumer010 = new FlinkKafkaConsumer010(Arrays.asList(topicArrays),
+				new EscafKeyValueDeserializationSchema(), p);
+		// consumer010.setStartFromLatest();
+		consumer010.setStartFromEarliest();
+
+		return consumer010;
+	}
+
 	@SuppressWarnings("rawtypes")
 	public static FlinkKafkaProducer010 createKafkaProducer010() {
 		return null;
@@ -106,7 +131,7 @@ public class EscafFlinkSupport {
 				.setConnectTimeout(flinkConfig.getInteger("flink.redis.timeout"))
 				.setServerIp(flinkConfig.getRequried("flink.redis.host"))
 				.setMorphlineKey(flinkConfig.getRequried("flink.redis.morphlinekey"))
-				.setCommandDataType(flinkConfig.getRequried("flink.morphlin.cmdtype")).build();
+				.setDataType(flinkConfig.get("flink.morphline.datatype", null)).build();
 
 	}
 
