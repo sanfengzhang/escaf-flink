@@ -32,8 +32,13 @@ public class EscafKeyValueDeserializationSchema implements KeyedDeserializationS
 			throws IOException {
 
 		EscafKafkaMessage result = new EscafKafkaMessage();
-		result.setKey(simpleStringSchema.deserialize(messageKey));
-		result.setValue(simpleStringSchema.deserialize(message));
+		if (null != messageKey) {
+			result.setKey(simpleStringSchema.deserialize(messageKey));
+		}
+		if (null != message) {
+			result.setValue(simpleStringSchema.deserialize(message));
+		}
+
 		result.setTopic(topic);
 		result.setPartition(partition);
 

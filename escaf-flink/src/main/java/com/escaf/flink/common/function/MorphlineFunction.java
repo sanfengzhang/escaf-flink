@@ -1,13 +1,13 @@
 package com.escaf.flink.common.function;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.kitesdk.morphline.api.Command;
@@ -38,8 +38,7 @@ import com.typesafe.config.ConfigFactory;
  * @author HANLIN
  *
  */
-public abstract class MorphlineFunction
-		extends RichMapFunction<EscafKafkaMessage, org.apache.avro.generic.GenericData.Record> {
+public abstract class MorphlineFunction extends RichMapFunction<EscafKafkaMessage, Map<String, Object>> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -52,6 +51,7 @@ public abstract class MorphlineFunction
 
 	protected String dataType = null;
 
+	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(MorphlineFunction.class);
 
 	public MorphlineFunction() {
@@ -86,7 +86,7 @@ public abstract class MorphlineFunction
 	}
 
 	@Override
-	public org.apache.avro.generic.GenericData.Record map(EscafKafkaMessage message) throws Exception {
+	public Map<String, Object> map(EscafKafkaMessage message) throws Exception {
 
 		try {
 
@@ -103,18 +103,26 @@ public abstract class MorphlineFunction
 				Notifications.notifyStartSession(cmd);
 				if (!cmd.process(record)) {
 
-					log.warn("Morphline {} failed to process record: {}", message.toString());
+//					log.warn("Morphline {} failed to process record: {}", message.toString());
 					return null;
 				}
 				record = finalChild.getRecords().get(0);
-				GenericData.Record resultRecord = (org.apache.avro.generic.GenericData.Record) record
-						.get("_attachment_body").get(0);
 
-				if (null == resultRecord) {
-					throw new NullPointerException("handle record faild value=" + message);
+				Map<String, Collection<Object>> list = record.getFields().asMap();
+				Iterator<Entry<String, Collection<Object>>> it = list.entrySet().iterator();
+
+				Map<String, Object> resultMap = new HashMap<String, Object>();
+				while (it.hasNext()) {
+					Entry<String, Collection<Object>> en = it.next();
+
+					if (en.getKey().equals("message")) {
+						continue;
+					}
+
+					resultMap.put(en.getKey(), en.getValue().iterator().next());
 				}
 
-				return resultRecord;
+				return resultMap;
 
 			}
 

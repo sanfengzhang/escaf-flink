@@ -1,6 +1,7 @@
 package com.escaf.flink.app;
 
-import org.apache.avro.generic.GenericData.Record;
+import java.util.Map;
+
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -25,26 +26,22 @@ public class TransApp {
 
 class TransJob extends BaseEscafJob {
 
-	private static final String RESATRT_ATTEMPTS = "flink.restartAttempts";
-
-	private static final String DELAY_BETWEEN_ATTEMPTS = "flink.delayBetweenAttempts";
-
-	private static final String CHECKPOINT_INTERVAL = "flink.checkponit.interval";
-
 	@SuppressWarnings("unchecked")
 	public void start() throws Exception {
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.getConfig().disableSysoutLogging();
-		env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(
-				flinkConfig.getInteger(RESATRT_ATTEMPTS, 4), flinkConfig.getInteger(DELAY_BETWEEN_ATTEMPTS, 10000)));
-		env.enableCheckpointing(flinkConfig.getInteger(CHECKPOINT_INTERVAL, 5000));
+		env.getConfig()
+				.setRestartStrategy(RestartStrategies.fixedDelayRestart(
+						flinkConfig.getInteger(EscafFlinkSupport.RESATRT_ATTEMPTS, 4),
+						flinkConfig.getInteger(EscafFlinkSupport.DELAY_BETWEEN_ATTEMPTS, 10000)));
+		env.enableCheckpointing(flinkConfig.getInteger(EscafFlinkSupport.CHECKPOINT_INTERVAL, 5000));
 
 		env.getConfig().setGlobalJobParameters(getGlobalJobParameters());
 
 		DataStream<EscafKafkaMessage> messageStream = env
 				.addSource(EscafFlinkSupport.createKafkaConsumer010JSON(true, flinkConfig));
 
-		DataStream<Record> messageStream1 = messageStream
+		DataStream<Map<String,Object>> messageStream1 = messageStream
 				.map(EscafFlinkSupport.createRedisMorphlineFunction(flinkConfig));
 
 		DataStream<Row> messageStream2 = messageStream1.flatMap(new JdbcRowFunction(flinkConfig));

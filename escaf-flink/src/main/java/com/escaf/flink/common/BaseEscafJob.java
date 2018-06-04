@@ -1,5 +1,7 @@
 package com.escaf.flink.common;
 
+import java.lang.reflect.InvocationTargetException;
+
 import javax.activation.UnsupportedDataTypeException;
 
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -15,16 +17,16 @@ public abstract class BaseEscafJob {
 	 */
 	public BaseEscafJob() {
 
-		createInstance(FLINK_CONFIG_CLASS);
+		createInstance(FLINK_CONFIG_CLASS, null);
 
 	}
 
 	public BaseEscafJob(String resourceFileName) {
 
 		if (resourceFileName.contains("redis")) {
-			createInstance(RedisFlinkConfig.class.getName());
+			createInstance(RedisFlinkConfig.class.getName(), resourceFileName);
 		} else if (resourceFileName.contains("local")) {
-			createInstance(FLINK_CONFIG_CLASS);
+			createInstance(FLINK_CONFIG_CLASS, resourceFileName);
 		} else {
 			try {
 				throw new UnsupportedDataTypeException("do not support this config,filename=" + resourceFileName);
@@ -35,11 +37,17 @@ public abstract class BaseEscafJob {
 
 	}
 
-	private void createInstance(String clazzName) {
+	private void createInstance(String clazzName, String resourceFileName) {
 		try {
 			@SuppressWarnings("unchecked")
 			Class<AbstractFlinkConfig> cfgInstance = (Class<AbstractFlinkConfig>) Class.forName(clazzName);
-			flinkConfig = cfgInstance.newInstance();
+
+			if (null == resourceFileName) {
+				flinkConfig = cfgInstance.newInstance();
+			} else {
+				flinkConfig = cfgInstance.getConstructor(String.class).newInstance(resourceFileName);
+			}
+
 			if (null == flinkConfig) {
 
 				throw new NullPointerException("init AbstractFlinkConfig Object must not null ");
@@ -52,6 +60,18 @@ public abstract class BaseEscafJob {
 
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

@@ -25,6 +25,12 @@ public class EscafFlinkSupport {
 	private static final String JDBC_OUTPUTFORMAT_TYPES = "flink.jdbcoutputformat.types";
 
 	private static final String JDBC_OUTPUTFORMAT_TABLENAME = "flink.jdbcoutputformat.tablename";
+	
+	public static final String RESATRT_ATTEMPTS = "flink.restartAttempts";
+
+	public static final String DELAY_BETWEEN_ATTEMPTS = "flink.delayBetweenAttempts";
+
+	public static final String CHECKPOINT_INTERVAL = "flink.checkponit.interval";
 
 	/**
 	 * 初始化kafka consumer还可以设置 // auto.offset.reset该字段的配置可以通过方法配置

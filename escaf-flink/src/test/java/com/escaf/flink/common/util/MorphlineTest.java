@@ -37,9 +37,60 @@ public class MorphlineTest {
 	private Collector finalChid;
 
 	@Test
+	public void testTradeLogMap() throws FileNotFoundException, IOException {
+
+		String value = IOUtils.toString(new FileInputStream(new File("src/test/resources/trade2.conf")));
+		Config config = ConfigFactory.parseString(value);
+		Collector finalChid = new Collector();
+		Command cmd = new Compiler().compile(config, morphlineContext, finalChid);
+
+		Record record = new Record();
+		String msg = "13:13:23:131 INFO  c.l.n.c.c.c.n.NcbsTrade 234 | 发送jydm=[999999]";
+		record.put(Fields.ATTACHMENT_BODY, msg.getBytes());
+
+		Notifications.notifyStartSession(cmd);
+		System.out.println(cmd.process(record));
+		record = finalChid.getRecords().get(0);
+
+		Map<String, Collection<Object>> list = record.getFields().asMap();
+		Iterator<Entry<String, Collection<Object>>> it=list.entrySet().iterator();
+		
+		while(it.hasNext()) {
+			Entry<String, Collection<Object>> en=it.next();
+			
+			System.out.println(en.getKey()+" "+en.getValue().iterator().next());
+		}
+		
+
+	}
+
+	@Test
+	public void testTradeLog() throws FileNotFoundException, IOException {
+
+		String value = IOUtils.toString(new FileInputStream(new File("src/test/resources/trade.conf")));
+		Config config = ConfigFactory.parseString(value);
+		Collector finalChid = new Collector();
+		Command cmd = new Compiler().compile(config, morphlineContext, finalChid);
+
+		Record record = new Record();
+		String msg = "13:13:23:131 INFO  c.l.n.c.c.c.n.NcbsTrade 234 | 发送jydm=[999999]";
+		record.put(Fields.ATTACHMENT_BODY, msg.getBytes());
+
+		Notifications.notifyStartSession(cmd);
+		System.out.println(cmd.process(record));
+		record = finalChid.getRecords().get(0);
+
+		System.out.println(record.toString());
+
+		GenericData.Record r = (org.apache.avro.generic.GenericData.Record) record.get("_attachment_body").get(0);
+
+		System.out.println(r.toString());
+	}
+
+	@Test
 	public void testTransLog() throws FileNotFoundException, IOException {
 
-		String value = IOUtils.toString(new FileInputStream(new File("C:\\Users\\owner\\Desktop\\temp.conf")));
+		String value = IOUtils.toString(new FileInputStream(new File("src/test/resources/temp.conf")));
 		Config config = ConfigFactory.parseString(value);
 		Collector finalChid = new Collector();
 		Command cmd = new Compiler().compile(config, morphlineContext, finalChid);
