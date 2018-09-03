@@ -51,7 +51,6 @@ public abstract class MorphlineFunction extends RichMapFunction<EscafKafkaMessag
 
 	protected String dataType = null;
 
-	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(MorphlineFunction.class);
 
 	public MorphlineFunction() {
@@ -103,7 +102,7 @@ public abstract class MorphlineFunction extends RichMapFunction<EscafKafkaMessag
 				Notifications.notifyStartSession(cmd);
 				if (!cmd.process(record)) {
 
-//					log.warn("Morphline {} failed to process record: {}", message.toString());
+					log.warn("Morphline {} failed to process record: {}", message.toString());
 					return null;
 				}
 				record = finalChild.getRecords().get(0);

@@ -23,7 +23,7 @@ public class RedisMorphlineFunction extends MorphlineFunction {
 	@Override
 	protected Map<String, String> getMorphlineCommandsMap() {
 		// FIXME 需要考虑保障redis连接挂掉了情况、重连情况、这里不使用Redis连接池
-		jedis = new ShardedJedis(Arrays.asList(new JedisShardInfo(serverIp, serverPort, connectTimeout)));
+		jedis = new ShardedJedis(Arrays.asList(new JedisShardInfo(serverIp, serverPort, connectTimeout)));		
 		Map<String, String> logtypeToCmd = jedis.hgetAll(morphlineKey);
 
 		return logtypeToCmd;
