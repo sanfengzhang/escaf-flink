@@ -26,8 +26,13 @@ import org.apache.flink.streaming.api.windowing.time.Time;
  * currentTimestamp-5000）>15000,所以currentTimestamp>20000的时候才出发
  * w(t)>15000的水印这个时候是可以触发计算（还有一些其他判断，暂时忽略分析）
  * 
- * 在这一块代码功能分析的方面：
- * {@HeapInternalTimerService#advanceWatermark}这个里面是触发Window计算的调用
+ * 在这里面有个问题join的时候我们知道Flink会在每个流里面都有watermark,但是窗口时一致的、那么Flink何时触发计算呢？
+ * 因为我两个流的watermark可能速度不一样了？
+ * 去查阅源代码我们知道：Flink对多个channel的watermark会做对齐处理、并且从中取一个最小的watermark进行更新和后续的处理
+ * {@StatusWatermarkValve#inputWatermark(Watermark, int)}
+ * 
+ * 
+ * 在这一块代码功能分析的方面： {@HeapInternalTimerService#advanceWatermark}这个里面是触发Window计算的调用
  */
 
 public class JoinStream {
