@@ -1,0 +1,63 @@
+ Flink框架特点分析：
+ 
+ 需要直到Flink是怎么实现的、在各种特性下可能存在什么样的问题需要知道产生的原因和解决的办法。
+ 这才是阅读源码的重点
+ 
+ 1. 提供了可以恢复数据流应用到一致状态的容错机制。确保在发生故障时，
+        程序的每条记录只会作用于状态一次（exactly-once），当然也可以降级为至少一次（at-least-once）
+ 2. 对EventTime的良好的支持（eventTime、Window、WaterMark）
+ 3.对Window的支持，时间窗口、计数窗口
+ 4.支持不同的流之间的join、union(两条流的时候可以不同类型、但是多条之间必须是同类型的)
+ 5.对CEP的支持
+
+
+Flink是一个实时流数据处理的框架：
+借用Flink注释中的描述：数据的模型
+ * <pre>{@code
+ * +-----+              +---------------------+              +--------+
+ * | Map | = produce => | Intermediate Result | <= consume = | Reduce |
+ * +-----+              +---------------------+              +--------+
+ * }</pre>
+ *
+ * <p> When deploying such a program in parallel, the intermediate result will be partitioned over its
+ * producing parallel subtasks; each of these partitions is furthermore partitioned into one or more
+ * subpartitions.
+ *
+ * <pre>{@code
+ *                            Intermediate result
+ *               +-----------------------------------------+
+ *               |                      +----------------+ |              +-----------------------+
+ * +-------+     | +-------------+  +=> | Subpartition 1 | | <=======+=== | Input Gate | Reduce 1 |
+ * | Map 1 | ==> | | Partition 1 | =|   +----------------+ |         |    +-----------------------+
+ * +-------+     | +-------------+  +=> | Subpartition 2 | | <==+    |
+ *               |                      +----------------+ |    |    | Subpartition request
+ *               |                                         |    |    |
+ *               |                      +----------------+ |    |    |
+ * +-------+     | +-------------+  +=> | Subpartition 1 | | <==+====+
+ * | Map 2 | ==> | | Partition 2 | =|   +----------------+ |    |         +-----------------------+
+ * +-------+     | +-------------+  +=> | Subpartition 2 | | <==+======== | Input Gate | Reduce 2 |
+ *               |                      +----------------+ |              +-----------------------+
+ *               +-----------------------------------------+
+ 
+ 
+ 
+ 下游的operator需要请求上游算子处理的 Intermediate result数据、这样在Flink中是怎么去做的呢？
+ 这里主要有两个类，BarrierBuffer和StreamInputProcessor,这里面涉及到流处理一些特性的处理：
+ CkeckPonit的处理、WaterMark的处理、普通数据记录的一些处理
+ 
+ 关于上述问题在其两个文件的源代码中部分的分析
+ 
+
+
+ 
+
+
+
+
+
+
+
+
+ 
+ 
+ 
