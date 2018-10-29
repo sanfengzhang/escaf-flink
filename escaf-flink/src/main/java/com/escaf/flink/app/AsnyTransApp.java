@@ -126,7 +126,21 @@ class QueryUserInfoFunction extends RichAsyncFunction<Integer, User> {
 	}
 
 	@Override
-	public void asyncInvoke(Integer input, ResultFuture<User> resultFuture) throws Exception {		
+	public void asyncInvoke(Integer input, ResultFuture<User> resultFuture) throws Exception {
+		//这里将callabel提交到线程池中去、线程池会触发对该线程的运行、这里也是我迷惑了一段时间在AsynIO中Flink是如何触发每一个
+		//StreamRecordQueueEntry本质也是个Future对象、其实就是在我们实现的useFunction中去异步执行的、
+		//在整个asyncInvoke方法中都是异步的代码、它并不会阻塞Flink当前算子的运行、当该Function执行完了之后会立即处理下一条数据
+		
+		//还有很重要一点需要理解：就是useFunction是如何将计算结果传递出去的？
+		//要知道该方法asyncInvoke传递的参数ResultFuture<User>是一个StreamRecordQueueEntry引用！！！这个对象在调用该函数之前会加入
+		//到StreamElementQueue队列中去，这样在队列中存储有ResultFuture对象、Flink就是这样做到异步IO处理的、来提高系统吞吐量、降低
+		//延迟.		
+		
+		//在这里是否需要对该功能模块进行一些监控度量？
+		
+		//咱们来分析一下下面两段代码执行：
+		//在将callable提交到Threadpool中去，和添加callback这些都是异步的、这个过程中会出现什么同步的问题吗？
+		//显然不会、要理解ListenableFuture
 		ListenableFuture<ResultSet> future = service.submit(new Callable<ResultSet>() {
 			public ResultSet call() throws Exception {
 				ResultSet resultSet = dataSource.getConnection()
