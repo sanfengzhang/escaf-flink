@@ -134,7 +134,7 @@ class QueryUserInfoFunction extends RichAsyncFunction<Integer, User> {
 		//还有很重要一点需要理解：就是useFunction是如何将计算结果传递出去的？
 		//要知道该方法asyncInvoke传递的参数ResultFuture<User>是一个StreamRecordQueueEntry引用！！！这个对象在调用该函数之前会加入
 		//到StreamElementQueue队列中去，这样在队列中存储有ResultFuture对象、Flink就是这样做到异步IO处理的、来提高系统吞吐量、降低
-		//延迟.		
+		//延迟。		
 		
 		//在这里是否需要对该功能模块进行一些监控度量？
 		
