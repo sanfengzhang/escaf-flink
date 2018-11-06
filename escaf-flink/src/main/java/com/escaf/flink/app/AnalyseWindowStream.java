@@ -25,7 +25,9 @@ import org.apache.flink.util.Collector;
  * 
  * 上述问题先放一下： 我们全面来学习一下window、系统的归纳window的一些性质、特点
  * 
- * 先看看window的分类： 1.按时间划分：时间滑动窗口（最近1分钟）、时间翻滚窗口(每隔1分钟计算一次)、 2.按计数进行划分:count window
+ * 先看看window的分类：
+ * 1.按时间划分：时间滑动窗口（最近1分钟）、时间翻滚窗口(每隔1分钟计算一次)、
+ * 2.按计数进行划分:count window
  * 3.session window
  * 定义场景:在这种用户交互事件流中，我们首先想到的是将事件聚合到会话窗口中（一段用户持续活跃的周期），由非活跃的间隙分隔开。
  * 
@@ -37,6 +39,13 @@ import org.apache.flink.util.Collector;
  * 是MergingWindowAssigner实例和非MergingWindowAssigner实例两种：
  * 那么{@MergingWindowAssigner}是什么意思呢？它是集成{@WindowAssigner}的一个抽象类、额外的提供了window聚合的方法和一个callback接口
  * {@WindowAssigner}作用是对元素分配到一个或多个窗口中、指定缺省的trigger、窗口的序列化的一些操作
+ * MergingWindowAssigner这个主要是针对sessionWindow实现的一个window分配规则如下：
+ * session window assinger会为每一条数据分配一个窗口、这个窗口的起始时间就是这个元素的时间戳、时间戳加会话超时时间为结束点，
+ * 也就是该窗口为[timestamp, timestamp+sessionGap)、
+ * 
+ *
+ * 
+ * 
  * 
  * 再聊聊window的实现的一些基本点：
  * 从上面的window划分：Flink提供的GlobalWindow、TimeWindow(因为Flink在处理数据的时候可以结合自己的业务time维度进行分析：事件时间、处理事件、系统时间)
