@@ -5,10 +5,28 @@
  
  1. 提供了可以恢复数据流应用到一致状态的容错机制。确保在发生故障时，
         程序的每条记录只会作用于状态一次（exactly-once），当然也可以降级为至少一次（at-least-once）
- 2. 对EventTime的良好的支持（eventTime、Window、WaterMark）
- 3.对Window的支持，时间窗口、计数窗口
- 4.支持不同的流之间的join、union(两条流的时候可以不同类型、但是多条之间必须是同类型的)
- 5.对CEP的支持
+ 2. 对EventTime的良好的支持（eventTime、Window、WaterMark的机制是什么样的？watermark触发的方式？）
+ 3.对Window的支持，时间窗口、计数窗口、trigger
+ 4.支持不同的流之间的join、union(两条流的时候可以不同类型、但是多条之间必须是同类型的)、join在流数据中的真正的意义、是要结合时间窗口才有意义
+ 5.对CEP的支持、CEP实现的核心是状态自动机
+ 6.Flink为什么可以理解为纯流式处理的模型？基本架构、数据处理模型
+ 7.Flink的内存管理、网络内存模型？这样做的好处是--->可以延伸到反压的-->到网络层面的拥塞、滑动（这里面可以扩充的知识点很多：包含netty对水位值的控制
+       、包括netty在和应用层面数据写入、到socket真正发送的一些设计）    
+ 8.Flink的异步IO的实现和应用场景、为什么会催生---->实时流数据处理和一些维表的关联、可能是流数据关联动态的维表？如何处理    
+ 
+ 9.Flink的状态机制、state、值状态和算子状态、这些状态在Flink中是怎么保存和恢复的-->checkpoint、需要理解state状态保存的实现支持的一些类型、和在flink中在做
+    CP的时候是如何优化流处理效率
+10.Flink的Job模型、Flink的有向无环图的解析、使用不同的图对算子进行描述、从streamGraph-->jobGraph 在这一块的设计中我们需要学习到一些编程的思想和设计方式
+     将客户端的 clientprogram能够实现到分布式程序运行的代码、将流式计算中的一些算子抽象成一些类和对象、
+
+11.再来看看Flink-kafka,因为流式处理和kafka的对接的一些关系设计： 
+    因为Flink的checkpoint机制所以一般选择在CP的时候触发offset提交、在Flink-kafka中支持实时监听topic的分区变化、并作出响应、并且在这中间实现了一个阻塞队列handover
+   这个阻塞队列的作用是、只有Flink将当前消费的records处理完了、才会去   handover中poll新的元素，否则handover中会阻塞元素的produce、从而达到能阻塞住kafka consumer
+   的poll操作，这样去平衡我们的消费速率。还有一个原因就是flink能自动去发现topic分区的变化、这段代码执行流程是：先检查是否有东西需要提交offset--->再判断当前是否需要
+   重新分配分区(根据新的分区策略生成新的consumer)--->从consumer poll元素这样一个循环fetch record
+ 
+ 
+ 
 
 
 Flink是一个实时流数据处理的框架：
