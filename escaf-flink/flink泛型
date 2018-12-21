@@ -1,0 +1,101 @@
+could not be determined automatically, due to type erasure. You can give type information hints by using the returns(...) method on the result of the transformation call, or by letting your function implement the 'ResultTypeQueryable' interface.
+
+想对flink函数返回值进行泛型定义有两种方式：1.是在流计算后面使用returns函数 2.function实现ResultTypeQueryable接口
+
+实例：
+private static void pojoTest() throws Exception {
+
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+		StreamTableEnvironment tEnv = TableEnvironment.getTableEnvironment(env);
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+		env.setMaxParallelism(4);
+
+		DataStream<String> dataStream = env.socketTextStream("127.0.0.1", 8085);
+
+		Map<String, TypeInformation<?>> fields = new HashMap<String, TypeInformation<?>>();
+		fields.put("id", BasicTypeInfo.INT_TYPE_INFO);
+		fields.put("name", BasicTypeInfo.STRING_TYPE_INFO);
+		fields.put("age", BasicTypeInfo.INT_TYPE_INFO);
+		fields.put("type", BasicTypeInfo.STRING_TYPE_INFO);
+
+		TypeInformation<MyUser> typeInfo = Types.POJO(MyUser.class);
+
+		DataStream<MyUser> sourceStream = dataStream.map(new MyFunction3<MyUser>()).returns(typeInfo);
+		sourceStream.print();
+
+		Table tableA = tEnv.fromDataStream(sourceStream, "id,name,age,type");
+		Table result = tEnv.sqlQuery("SELECT * FROM " + tableA + " WHERE id = 2 or id=4");
+
+		// 需要指定表映射的字段，指定field字段
+		TypeInformation<MyUser> typeInfo1 = Types.POJO(MyUser.class, fields);
+		DataStream<Tuple2<Boolean, MyUser>> userSteam = tEnv.toRetractStream(result, typeInfo1);
+		userSteam.print();
+
+		env.execute();
+
+	}
+ 
+  
+  class MyFunction3<T> implements MapFunction<String, T> {
+
+	private static final long serialVersionUID = 1L;
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public T map(String value) throws Exception {
+		try {
+			String[] rs = StringUtils.split(value, ",");
+			MyUser user = new MyUser();
+			user.setId(Integer.valueOf(rs[0]));
+			user.setName(String.valueOf(rs[1]));
+			user.setAge(Integer.valueOf(rs[2]));
+			user.setType(String.valueOf(rs[3]));
+			user.setDatatime(Long.valueOf(String.valueOf(rs[4])));
+			return (T) user;
+		} catch (Exception e) {
+			System.out.println(e + "," + value);
+		}
+
+		return null;
+	}
+
+}
+
+
+
+2.实现接口的方式
+class MyFunction<T> implements MapFunction<String, T>, ResultTypeQueryable<T> {
+
+	private static final long serialVersionUID = 1L;
+
+	private TypeInformation[] fieldTypeInfos;
+
+	public MyFunction(TypeInformation[] fieldTypeInfos) {
+		super();
+		this.fieldTypeInfos = fieldTypeInfos;
+	}
+
+	@Override
+	public T map(String value) throws Exception {
+		try {
+			String[] rs = StringUtils.split(value, ",");
+			MyUser user = new MyUser();
+			user.setId(Integer.valueOf(rs[0]));
+			user.setName(String.valueOf(rs[1]));
+			user.setAge(Integer.valueOf(rs[2]));
+			user.setType(String.valueOf(rs[3]));
+			user.setDatatime(Long.valueOf(String.valueOf(rs[4])));
+			return (T) user;
+		} catch (Exception e) {
+			System.out.println(e + "," + value);
+		}
+
+		return null;
+	}
+
+	@Override
+	public TypeInformation getProducedType() {
+
+		return fieldTypeInfos[0];
+	}
